@@ -226,6 +226,31 @@ export class WebGLRenderer {
     this.updateProjection();
   }
 
+  // Public accessors for controlled access
+  getMaterialSystem(): MaterialSystem {
+    return this.materialSystem;
+  }
+
+  getRenderObjects(): Map<string, RenderObject> {
+    return this.renderObjects;
+  }
+
+  getCamera(): { x: number; y: number; zoom: number } {
+    return { ...this.camera };
+  }
+
+  clearRenderObjects(layerFilter?: (layer: number) => boolean) {
+    if (layerFilter) {
+      for (const [id, obj] of this.renderObjects) {
+        if (layerFilter(obj.layer)) {
+          this.renderObjects.delete(id);
+        }
+      }
+    } else {
+      this.renderObjects.clear();
+    }
+  }
+
   destroy() {
     this.shaderManager.destroy();
     this.materialSystem.destroy();

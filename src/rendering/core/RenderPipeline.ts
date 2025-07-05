@@ -14,10 +14,25 @@ export class RenderPipeline {
   private animationFrameId?: number;
 
   constructor(canvas: HTMLCanvasElement) {
-    this.renderer = new WebGLRenderer(canvas);
-    this.particleManager = new ParticleManager();
-    this.spriteAnimator = new SpriteAnimator();
-    this.materialSystem = this.renderer['materialSystem']; // Access private member
+    console.log('Initializing RenderPipeline...');
+    try {
+      this.renderer = new WebGLRenderer(canvas);
+      console.log('WebGLRenderer created successfully');
+      
+      this.particleManager = new ParticleManager();
+      console.log('ParticleManager created successfully');
+      
+      this.spriteAnimator = new SpriteAnimator();
+      console.log('SpriteAnimator created successfully');
+      
+      this.materialSystem = this.renderer.getMaterialSystem();
+      console.log('MaterialSystem accessed successfully');
+      
+      console.log('RenderPipeline initialization complete');
+    } catch (error) {
+      console.error('Failed to initialize RenderPipeline:', error);
+      throw error;
+    }
   }
 
   start() {
@@ -56,7 +71,7 @@ export class RenderPipeline {
     this.particleManager.update(deltaTime);
     
     // Update animations
-    const renderObjects = this.renderer['renderObjects']; // Access private member
+    const renderObjects = this.renderer.getRenderObjects();
     this.spriteAnimator.updateAnimations(renderObjects);
   }
 
@@ -163,7 +178,7 @@ export class RenderPipeline {
     const targetY = creature.torso.position.y - 50; // Offset camera up a bit
     
     // Simple camera following with smoothing
-    const currentCamera = this.renderer['camera']; // Access private member
+    const currentCamera = this.renderer.getCamera();
     const newX = currentCamera.x + (targetX - currentCamera.x) * smoothing;
     const newY = currentCamera.y + (targetY - currentCamera.y) * smoothing;
     
@@ -182,12 +197,7 @@ export class RenderPipeline {
   clear() {
     this.particleManager.clear();
     // Clear all render objects except terrain
-    const renderObjects = this.renderer['renderObjects']; // Access private member
-    for (const [id, obj] of renderObjects) {
-      if (obj.layer >= 0) { // Keep terrain (layer -1)
-        this.renderer.removeRenderObject(id);
-      }
-    }
+    this.renderer.clearRenderObjects((layer) => layer >= 0); // Keep terrain (layer -1)
   }
 
   destroy() {

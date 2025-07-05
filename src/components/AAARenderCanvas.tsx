@@ -6,6 +6,7 @@ import { RenderPipeline } from '@/rendering/core/RenderPipeline';
 import { usePhysicsEngine } from '@/hooks/usePhysicsEngine';
 import { useParticleEffects } from '@/hooks/useParticleEffects';
 import { useGameLogic } from '@/hooks/useGameLogic';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface AAARenderCanvasProps {
   walkParameters: WalkParameters;
@@ -185,24 +186,26 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
   }));
 
   return (
-    <div className={`creature-canvas ${className}`}>
-      <canvas 
-        ref={canvasRef}
-        className="w-full h-full rounded-2xl"
-        style={{ minHeight: '400px' }}
-      />
-      
-      {!isInitialized && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
-          <div className="text-center">
-            <div className="animate-silly-bounce text-4xl mb-2">🎮</div>
-            <p className="text-muted-foreground">Loading AAA graphics engine...</p>
-            <div className="mt-2 text-sm text-accent">
-              WebGL renderer • Particle systems • Advanced shaders
+    <ErrorBoundary>
+      <div className={`creature-canvas ${className}`}>
+        <canvas 
+          ref={canvasRef}
+          className="w-full h-full rounded-2xl"
+          style={{ minHeight: '400px' }}
+        />
+        
+        {!isInitialized && (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
+            <div className="text-center">
+              <div className="animate-silly-bounce text-4xl mb-2">🎮</div>
+              <p className="text-muted-foreground">Loading AAA graphics engine...</p>
+              <div className="mt-2 text-sm text-accent">
+                WebGL renderer • Particle systems • Advanced shaders
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ErrorBoundary>
   );
 });
