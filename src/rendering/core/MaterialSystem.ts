@@ -16,14 +16,34 @@ export class MaterialSystem {
   }
 
   private createDefaultMaterials() {
+    // Terrain materials using solid color shader
+    this.createMaterial('ground', {
+      shader: 'solid',
+      properties: {
+        color: [0.55, 0.27, 0.07, 1.0], // Brown ground
+      }
+    });
+
+    this.createMaterial('platform', {
+      shader: 'solid',
+      properties: {
+        color: [0.8, 0.6, 0.4, 1.0], // Lighter platform
+      }
+    });
+
+    this.createMaterial('goal', {
+      shader: 'solid',
+      properties: {
+        color: [0.2, 0.8, 0.2, 1.0], // Bright green goal
+      }
+    });
+
     // Creature body materials with design system colors
     this.createMaterial('creature-torso', {
       shader: 'creature',
       properties: {
         baseColor: [1.0, 0.42, 0.21, 1.0], // Primary color from design system
         energyColor: [1.0, 0.67, 0.4, 1.0], // Primary glow
-        roughness: 0.8,
-        metallic: 0.1
       }
     });
 
@@ -32,8 +52,6 @@ export class MaterialSystem {
       properties: {
         baseColor: [0.31, 0.8, 0.77, 1.0], // Accent color
         energyColor: [0.5, 0.9, 0.85, 1.0],
-        roughness: 0.7,
-        metallic: 0.0
       }
     });
 
@@ -42,36 +60,6 @@ export class MaterialSystem {
       properties: {
         baseColor: [0.64, 0.4, 0.8, 1.0], // Secondary color
         energyColor: [0.7, 0.5, 0.9, 1.0],
-        roughness: 0.6,
-        metallic: 0.2
-      }
-    });
-
-    // Terrain materials
-    this.createMaterial('ground', {
-      shader: 'sprite',
-      properties: {
-        color: [0.55, 0.27, 0.07, 1.0], // Brown ground
-        roughness: 1.0,
-        metallic: 0.0
-      }
-    });
-
-    this.createMaterial('platform', {
-      shader: 'sprite',
-      properties: {
-        color: [0.8, 0.6, 0.4, 1.0], // Lighter platform
-        roughness: 0.8,
-        metallic: 0.1
-      }
-    });
-
-    this.createMaterial('goal', {
-      shader: 'sprite',
-      properties: {
-        color: [0.2, 0.8, 0.2, 1.0], // Bright green goal
-        roughness: 0.3,
-        metallic: 0.5
       }
     });
 
@@ -81,7 +69,6 @@ export class MaterialSystem {
       properties: {
         startColor: [0.9, 0.8, 0.6, 0.8],
         endColor: [0.7, 0.6, 0.4, 0.0],
-        size: 4.0
       }
     });
 
@@ -90,9 +77,11 @@ export class MaterialSystem {
       properties: {
         startColor: [0.7, 0.9, 1.0, 1.0],
         endColor: [0.5, 0.7, 0.9, 0.0],
-        size: 3.0
       }
     });
+
+    // Create default white texture for sprite shader
+    this.createDefaultTexture();
   }
 
   createMaterial(id: string, config: {
@@ -192,6 +181,20 @@ export class MaterialSystem {
       textureUnit++;
     }
     
+    // For sprite shader, always bind default texture if no texture provided
+    if (material.shader === 'sprite' && Object.keys(material.textures).length === 0) {
+      const defaultTexture = this.textures.get('_default');
+      if (defaultTexture) {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, defaultTexture);
+        
+        const location = gl.getUniformLocation(shaderProgram, 'u_texture');
+        if (location) {
+          gl.uniform1i(location, 0);
+        }
+      }
+    }
+    
     // Set material properties as uniforms
     for (const [name, value] of Object.entries(material.properties)) {
       const location = gl.getUniformLocation(shaderProgram, `u_${name}`);
@@ -216,6 +219,29 @@ export class MaterialSystem {
         }
       }
     }
+  }
+
+  private createDefaultTexture() {
+    const gl = this.gl;
+    const texture = gl.createTexture();
+    
+    if (!texture) {
+      console.warn('Failed to create default texture');
+      return;
+    }
+
+    // Create 1x1 white pixel texture for fallback
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, 
+                  new Uint8Array([255, 255, 255, 255]));
+    
+    // Set texture parameters
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    this.textures.set('_default', texture);
   }
 
   destroy() {

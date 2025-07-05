@@ -13,7 +13,10 @@ export class ShaderManager {
   }
 
   loadDefaultShaders() {
-    // Basic sprite shader
+    // Solid color shader for terrain and simple objects
+    this.createShader('solid', this.getSolidVertexShader(), this.getSolidFragmentShader());
+    
+    // Basic sprite shader for textured objects
     this.createShader('sprite', this.getSpriteVertexShader(), this.getSpriteFragmentShader());
     
     // Particle shader
@@ -215,6 +218,33 @@ export class ShaderManager {
         float detail = sin(v_uv.x * 20.0) * sin(v_uv.y * 20.0) * 0.1;
         
         fragColor = vec4(color.rgb * pulse + detail, color.a);
+      }
+    `;
+  }
+
+  private getSolidVertexShader(): string {
+    return `#version 300 es
+      layout(location = 0) in vec2 a_position;
+      layout(location = 1) in vec2 a_uv;
+      
+      uniform mat4 u_mvpMatrix;
+      
+      void main() {
+        gl_Position = u_mvpMatrix * vec4(a_position, 0.0, 1.0);
+      }
+    `;
+  }
+
+  private getSolidFragmentShader(): string {
+    return `#version 300 es
+      precision highp float;
+      
+      uniform vec4 u_color;
+      
+      out vec4 fragColor;
+      
+      void main() {
+        fragColor = u_color;
       }
     `;
   }

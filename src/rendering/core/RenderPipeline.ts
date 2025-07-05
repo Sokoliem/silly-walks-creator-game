@@ -67,8 +67,13 @@ export class RenderPipeline {
   };
 
   private update(deltaTime: number) {
-    // Update particles
-    this.particleManager.update(deltaTime);
+    // Limit delta time to prevent spiral of death
+    deltaTime = Math.min(deltaTime, 0.016); // Cap at ~60fps
+    
+    // Update particles (less frequently for performance)
+    if (performance.now() % 2 === 0) { // Every other frame
+      this.particleManager.update(deltaTime);
+    }
     
     // Update animations
     const renderObjects = this.renderer.getRenderObjects();
@@ -76,11 +81,22 @@ export class RenderPipeline {
   }
 
   private render() {
+    // Performance tracking
+    const startTime = performance.now();
+    
     // Render main scene
     this.renderer.render();
     
-    // Render particles
-    this.renderParticles();
+    // Render particles (less frequently for performance)
+    if (this.particleManager.getParticleCount() > 0) {
+      this.renderParticles();
+    }
+    
+    // Log performance warnings
+    const renderTime = performance.now() - startTime;
+    if (renderTime > 16) { // More than 16ms = less than 60fps
+      console.warn(`Render took ${renderTime.toFixed(1)}ms - performance issue detected`);
+    }
   }
 
   private renderParticles() {

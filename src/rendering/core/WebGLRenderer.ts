@@ -30,6 +30,10 @@ export class WebGLRenderer {
   // Shared geometry buffers (create once, reuse many times)
   private quadVertexBuffer: WebGLBuffer | null = null;
   private quadIndexBuffer: WebGLBuffer | null = null;
+  
+  // Performance optimization: cache matrices
+  private matrixCache: Map<string, Float32Array> = new Map();
+  private cameraChanged = true;
 
   constructor(canvas: HTMLCanvasElement) {
     console.log('Initializing WebGLRenderer...');
@@ -125,10 +129,13 @@ export class WebGLRenderer {
   }
 
   setCamera(x: number, y: number, zoom: number) {
-    this.camera.x = x;
-    this.camera.y = y;
-    this.camera.zoom = zoom;
-    this.updateProjection();
+    if (this.camera.x !== x || this.camera.y !== y || this.camera.zoom !== zoom) {
+      this.camera.x = x;
+      this.camera.y = y;
+      this.camera.zoom = zoom;
+      this.cameraChanged = true;
+      this.updateProjection();
+    }
   }
 
   addRenderObject(obj: RenderObject) {
@@ -167,16 +174,15 @@ export class WebGLRenderer {
   private renderObject(obj: RenderObject) {
     const gl = this.gl;
     
-    // Determine shader based on material
-    let shaderName = 'sprite';
-    if (obj.material && obj.material.startsWith('creature')) {
-      shaderName = 'creature';
-    } else if (obj.material && obj.material.includes('particle')) {
-      shaderName = 'particle';
-    }
+    // Get material and determine shader
+    const material = this.materialSystem.getMaterial(obj.material || 'ground');
+    const shaderName = material ? material.shader : 'solid';
     
     const shader = this.shaderManager.getShader(shaderName);
-    if (!shader) return;
+    if (!shader) {
+      console.warn(`Shader not found: ${shaderName}`);
+      return;
+    }
     
     gl.useProgram(shader.program);
     
@@ -189,13 +195,15 @@ export class WebGLRenderer {
     
     // Set uniforms
     const mvpLocation = gl.getUniformLocation(shader.program, 'u_mvpMatrix');
-    gl.uniformMatrix4fv(mvpLocation, false, mvpMatrix);
+    if (mvpLocation) {
+      gl.uniformMatrix4fv(mvpLocation, false, mvpMatrix);
+    }
     
     // Set time uniform for animated shaders
     if (shaderName === 'creature') {
       const timeLocation = gl.getUniformLocation(shader.program, 'u_time');
       if (timeLocation) {
-        gl.uniform1f(timeLocation, Date.now());
+        gl.uniform1f(timeLocation, Date.now() * 0.001); // Convert to seconds
       }
       
       const energyLocation = gl.getUniformLocation(shader.program, 'u_energy');
@@ -204,19 +212,24 @@ export class WebGLRenderer {
       }
     }
     
-    // Bind material properties
-    if (obj.material) {
-      const material = this.materialSystem.getMaterial(obj.material);
-      if (material) {
-        this.materialSystem.bindMaterial(material, shader.program);
-      } else {
-        // Fallback color based on material name
-        this.setFallbackColor(shader.program, obj.material);
-      }
+    // Bind material properties or fallback
+    if (material) {
+      this.materialSystem.bindMaterial(material, shader.program);
+    } else {
+      // Fallback color for unknown materials
+      this.setFallbackColor(shader.program, obj.material || 'ground');
     }
     
     // Render quad (sprite)
     this.renderQuad();
+    
+    // Check for WebGL errors (only in debug mode)
+    if (console.assert) {
+      const error = gl.getError();
+      if (error !== gl.NO_ERROR) {
+        console.error(`WebGL error rendering object ${obj.id}:`, error);
+      }
+    }
   }
   
   private setFallbackColor(program: WebGLProgram, materialName: string) {

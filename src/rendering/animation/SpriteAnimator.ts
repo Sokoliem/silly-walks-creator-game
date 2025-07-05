@@ -23,6 +23,7 @@ export class SpriteAnimator {
     startTime: number;
     currentFrame: number;
   }> = new Map();
+  private lastUpdateTime = 0;
 
   constructor() {
     this.createDefaultAnimations();
@@ -102,6 +103,12 @@ export class SpriteAnimator {
   updateAnimations(renderObjects: Map<string, RenderObject>) {
     const currentTime = Date.now();
 
+    // Performance: Only update animations every few frames
+    if (currentTime - (this.lastUpdateTime || 0) < 16) { // ~60fps max
+      return;
+    }
+    this.lastUpdateTime = currentTime;
+
     for (const [objectId, animData] of this.activeAnimations) {
       const elapsed = (currentTime - animData.startTime) / 1000;
       const animation = animData.animation;
@@ -111,28 +118,15 @@ export class SpriteAnimator {
         continue;
       }
 
-      // Calculate current frame
-      let frameTime = 0;
-      let currentFrame = 0;
+      // Calculate current frame (simplified for performance)
       const normalizedTime = animation.loop ? elapsed % animation.duration : elapsed;
+      const frameIndex = Math.floor((normalizedTime / animation.duration) * animation.frames.length);
+      const currentFrame = Math.min(frameIndex, animation.frames.length - 1);
 
-      for (let i = 0; i < animation.frames.length; i++) {
-        if (normalizedTime >= frameTime && normalizedTime < frameTime + animation.frames[i].duration) {
-          currentFrame = i;
-          break;
-        }
-        frameTime += animation.frames[i].duration;
-      }
-
-      // Update render object with animation frame
+      // Update render object with animation frame (no interpolation for performance)
       const renderObject = renderObjects.get(objectId);
       if (renderObject) {
         const frame = animation.frames[currentFrame];
-        
-        // Interpolate between frames for smooth animation
-        const nextFrame = animation.frames[(currentFrame + 1) % animation.frames.length];
-        const frameProgress = (normalizedTime - frameTime) / frame.duration;
-        const t = this.smoothstep(frameProgress);
 
         // Store base transform if not exists
         if (!renderObject.baseTransform) {
@@ -143,18 +137,12 @@ export class SpriteAnimator {
           };
         }
 
-        // Apply animation offset to base transform (not accumulative)
-        const offsetX = this.lerp(frame.offset.x, nextFrame.offset.x, t);
-        const offsetY = this.lerp(frame.offset.y, nextFrame.offset.y, t);
-        const rotationOffset = this.lerp(frame.rotation, nextFrame.rotation, t);
-        const scaleX = this.lerp(frame.scale.x, nextFrame.scale.x, t);
-        const scaleY = this.lerp(frame.scale.y, nextFrame.scale.y, t);
-
-        renderObject.position.x = renderObject.baseTransform.position.x + offsetX;
-        renderObject.position.y = renderObject.baseTransform.position.y + offsetY;
-        renderObject.rotation = renderObject.baseTransform.rotation + rotationOffset;
-        renderObject.scale.x = renderObject.baseTransform.scale.x * scaleX;
-        renderObject.scale.y = renderObject.baseTransform.scale.y * scaleY;
+        // Apply animation offset to base transform (simplified)
+        renderObject.position.x = renderObject.baseTransform.position.x + frame.offset.x;
+        renderObject.position.y = renderObject.baseTransform.position.y + frame.offset.y;
+        renderObject.rotation = renderObject.baseTransform.rotation + frame.rotation;
+        renderObject.scale.x = renderObject.baseTransform.scale.x * frame.scale.x;
+        renderObject.scale.y = renderObject.baseTransform.scale.y * frame.scale.y;
       }
 
       animData.currentFrame = currentFrame;
