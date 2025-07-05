@@ -66,6 +66,15 @@ export class MaterialSystem {
       }
     });
 
+    this.createMaterial('goal', {
+      shader: 'sprite',
+      properties: {
+        color: [0.2, 0.8, 0.2, 1.0], // Bright green goal
+        roughness: 0.3,
+        metallic: 0.5
+      }
+    });
+
     // Particle materials
     this.createMaterial('dust-particle', {
       shader: 'particle',

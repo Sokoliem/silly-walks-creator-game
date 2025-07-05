@@ -119,7 +119,11 @@ const ParadeGround = () => {
     
     saveProgress(levelId!, newProgress);
 
+    // Play completion sound
     if (success) {
+      import('@/lib/audio').then(({ audioManager }) => {
+        audioManager.playSuccess();
+      });
       toast(`Level completed! ${stars} stars earned!`);
     } else {
       toast("Keep trying! You'll get it next time!");
@@ -155,12 +159,31 @@ const ParadeGround = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={resetGame}>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              resetGame();
+              // Play UI click sound
+              import('@/lib/audio').then(({ audioManager }) => {
+                audioManager.playClick();
+              });
+            }}
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset
           </Button>
           <Button
-            onClick={isPlaying ? stopGame : startGame}
+            onClick={() => {
+              if (isPlaying) {
+                stopGame();
+              } else {
+                startGame();
+              }
+              // Play UI click sound
+              import('@/lib/audio').then(({ audioManager }) => {
+                audioManager.playClick();
+              });
+            }}
             className="silly-button"
           >
             {isPlaying ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
@@ -244,13 +267,25 @@ const ParadeGround = () => {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/level-select')}
+                  onClick={() => {
+                    navigate('/level-select');
+                    // Play UI click sound
+                    import('@/lib/audio').then(({ audioManager }) => {
+                      audioManager.playClick();
+                    });
+                  }}
                   className="flex-1"
                 >
                   Level Select
                 </Button>
                 <Button
-                  onClick={startGame}
+                  onClick={() => {
+                    startGame();
+                    // Play UI click sound
+                    import('@/lib/audio').then(({ audioManager }) => {
+                      audioManager.playClick();
+                    });
+                  }}
                   className="flex-1 silly-button"
                 >
                   Try Again

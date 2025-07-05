@@ -139,9 +139,16 @@ export class RenderPipeline {
     this.spriteAnimator.startAnimation(`${creatureId}_torso`, animationId);
   }
 
-  // Particle effects
+  // Particle effects with audio
   createFootstepEffect(x: number, y: number) {
     this.particleManager.createDustEmitter(x, y);
+    
+    // Play footstep sound with slight delay for realism
+    setTimeout(() => {
+      import('@/lib/audio').then(({ audioManager }) => {
+        audioManager.playFootstep();
+      });
+    }, 50);
   }
 
   createSweatEffect(x: number, y: number) {
@@ -150,6 +157,11 @@ export class RenderPipeline {
 
   createImpactEffect(x: number, y: number, intensity = 1.0) {
     this.particleManager.createImpactEmitter(x, y, intensity);
+    
+    // Play landing sound based on impact intensity
+    import('@/lib/audio').then(({ audioManager }) => {
+      audioManager.playLanding(intensity);
+    });
   }
 
   // Terrain rendering

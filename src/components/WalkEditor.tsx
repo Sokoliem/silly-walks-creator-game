@@ -36,7 +36,13 @@ export const WalkEditor = ({
         </h2>
         <div className="flex gap-2">
           <Button
-            onClick={onPlayToggle}
+            onClick={() => {
+              onPlayToggle();
+              // Play UI click sound
+              import('@/lib/audio').then(({ audioManager }) => {
+                audioManager.playClick();
+              });
+            }}
             className="silly-button"
             size="sm"
           >
@@ -44,7 +50,13 @@ export const WalkEditor = ({
             {isPlaying ? 'Pause' : 'Walk!'}
           </Button>
           <Button
-            onClick={onReset}
+            onClick={() => {
+              onReset();
+              // Play UI click sound
+              import('@/lib/audio').then(({ audioManager }) => {
+                audioManager.playClick();
+              });
+            }}
             variant="outline"
             size="sm"
           >

@@ -127,8 +127,16 @@ export class WebGLRenderer {
 
   private renderObject(obj: RenderObject) {
     const gl = this.gl;
-    const shader = this.shaderManager.getShader('sprite');
     
+    // Determine shader based on material
+    let shaderName = 'sprite';
+    if (obj.material && obj.material.startsWith('creature')) {
+      shaderName = 'creature';
+    } else if (obj.material && obj.material.includes('particle')) {
+      shaderName = 'particle';
+    }
+    
+    const shader = this.shaderManager.getShader(shaderName);
     if (!shader) return;
     
     gl.useProgram(shader.program);
@@ -144,8 +152,57 @@ export class WebGLRenderer {
     const mvpLocation = gl.getUniformLocation(shader.program, 'u_mvpMatrix');
     gl.uniformMatrix4fv(mvpLocation, false, mvpMatrix);
     
+    // Set time uniform for animated shaders
+    if (shaderName === 'creature') {
+      const timeLocation = gl.getUniformLocation(shader.program, 'u_time');
+      if (timeLocation) {
+        gl.uniform1f(timeLocation, Date.now());
+      }
+      
+      const energyLocation = gl.getUniformLocation(shader.program, 'u_energy');
+      if (energyLocation) {
+        gl.uniform1f(energyLocation, 0.5); // Default energy level
+      }
+    }
+    
+    // Bind material properties
+    if (obj.material) {
+      const material = this.materialSystem.getMaterial(obj.material);
+      if (material) {
+        this.materialSystem.bindMaterial(material, shader.program);
+      } else {
+        // Fallback color based on material name
+        this.setFallbackColor(shader.program, obj.material);
+      }
+    }
+    
     // Render quad (sprite)
     this.renderQuad();
+  }
+  
+  private setFallbackColor(program: WebGLProgram, materialName: string) {
+    const gl = this.gl;
+    const colorLocation = gl.getUniformLocation(program, 'u_color');
+    
+    if (colorLocation) {
+      let color = [1.0, 1.0, 1.0, 1.0]; // Default white
+      
+      switch (materialName) {
+        case 'ground':
+          color = [0.55, 0.27, 0.07, 1.0]; // Brown
+          break;
+        case 'platform':
+          color = [0.8, 0.6, 0.4, 1.0]; // Light brown
+          break;
+        case 'goal':
+          color = [0.2, 0.8, 0.2, 1.0]; // Green
+          break;
+        default:
+          color = [1.0, 0.42, 0.21, 1.0]; // Primary color
+      }
+      
+      gl.uniform4fv(colorLocation, color);
+    }
   }
 
   private createModelMatrix(obj: RenderObject): Float32Array {
