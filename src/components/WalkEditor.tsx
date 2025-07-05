@@ -3,7 +3,11 @@ import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, RotateCcw } from 'lucide-react';
+import { Play, Pause, RotateCcw, Eye, EyeOff } from 'lucide-react';
+import { VisualTimeline } from './VisualTimeline';
+import { WalkTemplates } from './WalkTemplates';
+import { ParameterVisualizer } from './ParameterVisualizer';
+import { useState } from 'react';
 
 interface WalkEditorProps {
   parameters: WalkParameters;
@@ -20,6 +24,7 @@ export const WalkEditor = ({
   onPlayToggle, 
   onReset 
 }: WalkEditorProps) => {
+  const [showAdvanced, setShowAdvanced] = useState(false);
   
   const updateParameter = (key: keyof WalkParameters, value: number | [number, number]) => {
     onParametersChange({
@@ -66,7 +71,35 @@ export const WalkEditor = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Enhanced Controls Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <VisualTimeline 
+          parameters={parameters}
+          isPlaying={isPlaying}
+          onPlayToggle={onPlayToggle}
+        />
+        <WalkTemplates 
+          currentParameters={parameters}
+          onParametersChange={onParametersChange}
+        />
+        <ParameterVisualizer parameters={parameters} />
+      </div>
+
+      {/* Advanced Toggle */}
+      <div className="flex justify-center">
+        <Button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          variant="outline"
+          className="hover-scale"
+        >
+          {showAdvanced ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+          {showAdvanced ? 'Hide' : 'Show'} Advanced Parameters
+        </Button>
+      </div>
+
+      {showAdvanced && (
+        <div className="animate-fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-4 space-y-4">
           <h3 className="font-semibold text-lg text-primary">Hip Movement</h3>
           
@@ -206,7 +239,9 @@ export const WalkEditor = ({
             </div>
           </div>
         </Card>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
