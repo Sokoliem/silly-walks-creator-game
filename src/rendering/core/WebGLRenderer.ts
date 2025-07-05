@@ -67,16 +67,28 @@ export class WebGLRenderer {
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     
-    // Set clear color to transparent
-    gl.clearColor(0, 0, 0, 0);
+    // Set clear color to visible dark blue for debugging
+    gl.clearColor(0.1, 0.1, 0.3, 1.0);
+    console.log('WebGL clear color set to dark blue for visibility');
     
     // Initialize default shaders
+    console.log('Loading default shaders...');
     this.shaderManager.loadDefaultShaders();
+    console.log('Default shaders loaded');
     
     // Create shared quad geometry once
+    console.log('Creating quad geometry...');
     this.createQuadGeometry();
+    console.log('Quad geometry created');
     
     this.updateProjection();
+    
+    // Test WebGL state
+    console.log('WebGL state check:', {
+      blend: gl.isEnabled(gl.BLEND),
+      viewport: gl.getParameter(gl.VIEWPORT),
+      clearColor: gl.getParameter(gl.COLOR_CLEAR_VALUE)
+    });
   }
 
   private createQuadGeometry() {
@@ -192,11 +204,22 @@ export class WebGLRenderer {
     
     const shader = this.shaderManager.getShader(shaderName);
     if (!shader) {
-      console.warn(`Shader not found: ${shaderName}`);
+      console.warn(`Shader not found: ${shaderName} for object ${obj.id}`);
       return;
     }
     
+    // Debug: Log shader usage
+    if (Date.now() % 2000 < 50) {
+      console.log(`Rendering ${obj.id}: shader=${shaderName}, material=${obj.material}, hasShader=${!!shader}`);
+    }
+    
     gl.useProgram(shader.program);
+    
+    // Check if program is valid
+    if (!gl.getProgramParameter(shader.program, gl.LINK_STATUS)) {
+      console.error(`Shader program not linked for ${shaderName}:`, gl.getProgramInfoLog(shader.program));
+      return;
+    }
     
     // Set up transformation matrix
     const modelMatrix = this.createModelMatrix(obj);
