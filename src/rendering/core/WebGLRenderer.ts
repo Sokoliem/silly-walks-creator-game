@@ -165,9 +165,21 @@ export class WebGLRenderer {
       .filter(obj => obj.visible)
       .sort((a, b) => a.layer - b.layer);
     
+    // Debug: Log render info every few seconds
+    if (Date.now() % 3000 < 50) {
+      console.log(`WebGL Render: ${sortedObjects.length} objects, Canvas: ${this.canvas.width}x${this.canvas.height}, Camera: x=${this.camera.x}, y=${this.camera.y}, zoom=${this.camera.zoom}`);
+      sortedObjects.forEach(obj => console.log(`  - ${obj.id}: pos(${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}) scale(${obj.scale.x}, ${obj.scale.y}) material: ${obj.material}`));
+    }
+    
     // Render each object
     for (const obj of sortedObjects) {
       this.renderObject(obj);
+    }
+    
+    // Check for WebGL errors
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) {
+      console.error('WebGL render error:', error);
     }
   }
 

@@ -51,11 +51,19 @@ export class RenderPipeline {
   }
 
   private renderLoop = () => {
-    if (!this.isRunning) return;
+    if (!this.isRunning) {
+      console.log('RenderLoop: Not running, stopping');
+      return;
+    }
 
     const currentTime = performance.now();
     const deltaTime = (currentTime - this.lastFrameTime) / 1000;
     this.lastFrameTime = currentTime;
+
+    // Debug: Log render loop activity every 60 frames
+    if (Math.floor(currentTime / 1000) !== Math.floor((currentTime - 16) / 1000)) {
+      console.log('RenderLoop: Active, objects:', this.renderer.getRenderObjects().size);
+    }
 
     // Update systems
     this.update(deltaTime);
