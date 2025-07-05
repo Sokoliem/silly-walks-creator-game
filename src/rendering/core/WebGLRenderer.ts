@@ -26,6 +26,10 @@ export class WebGLRenderer {
   private viewMatrix: Float32Array;
   private projectionMatrix: Float32Array;
   private camera: { x: number; y: number; zoom: number };
+  
+  // Shared geometry buffers (create once, reuse many times)
+  private quadVertexBuffer: WebGLBuffer | null = null;
+  private quadIndexBuffer: WebGLBuffer | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     console.log('Initializing WebGLRenderer...');
@@ -65,7 +69,37 @@ export class WebGLRenderer {
     // Initialize default shaders
     this.shaderManager.loadDefaultShaders();
     
+    // Create shared quad geometry once
+    this.createQuadGeometry();
+    
     this.updateProjection();
+  }
+
+  private createQuadGeometry() {
+    const gl = this.gl;
+    
+    // Quad vertices: position (x, y) + UV coordinates (u, v)
+    const vertices = new Float32Array([
+      -0.5, -0.5,  0.0, 0.0,  // Bottom left
+       0.5, -0.5,  1.0, 0.0,  // Bottom right
+       0.5,  0.5,  1.0, 1.0,  // Top right
+      -0.5,  0.5,  0.0, 1.0   // Top left
+    ]);
+    
+    const indices = new Uint16Array([
+      0, 1, 2,  // First triangle
+      2, 3, 0   // Second triangle
+    ]);
+    
+    // Create vertex buffer
+    this.quadVertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    
+    // Create index buffer
+    this.quadIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.quadIndexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
   }
 
   updateProjection() {
@@ -244,27 +278,14 @@ export class WebGLRenderer {
   private renderQuad() {
     const gl = this.gl;
     
-    // Simple quad vertices (will be enhanced with proper vertex buffers)
-    const vertices = new Float32Array([
-      -0.5, -0.5,  0.0, 0.0,  // Bottom left
-       0.5, -0.5,  1.0, 0.0,  // Bottom right
-       0.5,  0.5,  1.0, 1.0,  // Top right
-      -0.5,  0.5,  0.0, 1.0   // Top left
-    ]);
+    if (!this.quadVertexBuffer || !this.quadIndexBuffer) {
+      console.warn('Quad geometry not initialized');
+      return;
+    }
     
-    const indices = new Uint16Array([
-      0, 1, 2,  // First triangle
-      2, 3, 0   // Second triangle
-    ]);
-    
-    // Create and bind vertex buffer (simplified for now)
-    const vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    
-    const indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+    // Bind the shared vertex buffer
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.quadVertexBuffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.quadIndexBuffer);
     
     // Set up vertex attributes
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);  // Position
@@ -274,10 +295,6 @@ export class WebGLRenderer {
     
     // Draw
     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-    
-    // Cleanup
-    gl.deleteBuffer(vertexBuffer);
-    gl.deleteBuffer(indexBuffer);
   }
 
   resize(width: number, height: number) {
@@ -314,6 +331,18 @@ export class WebGLRenderer {
   }
 
   destroy() {
+    const gl = this.gl;
+    
+    // Clean up shared buffers
+    if (this.quadVertexBuffer) {
+      gl.deleteBuffer(this.quadVertexBuffer);
+      this.quadVertexBuffer = null;
+    }
+    if (this.quadIndexBuffer) {
+      gl.deleteBuffer(this.quadIndexBuffer);
+      this.quadIndexBuffer = null;
+    }
+    
     this.shaderManager.destroy();
     this.materialSystem.destroy();
     this.renderObjects.clear();
