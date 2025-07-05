@@ -122,22 +122,33 @@ export class WebGLRenderer {
     const width = this.canvas.width;
     const height = this.canvas.height;
     
-    // Orthographic projection for 2D
+    // Create orthographic projection that maps world coordinates to screen
+    const zoom = this.camera.zoom;
+    const left = -width / (2 * zoom);
+    const right = width / (2 * zoom);
+    const bottom = height / (2 * zoom);  // Note: bottom > top for screen coordinates
+    const top = -height / (2 * zoom);
+    const near = -1;
+    const far = 1;
+    
+    // Orthographic projection matrix
     this.projectionMatrix.set([
-      2 / width, 0, 0, 0,
-      0, -2 / height, 0, 0,
-      0, 0, -1, 0,
-      -1, 1, 0, 1
+      2 / (right - left), 0, 0, 0,
+      0, 2 / (top - bottom), 0, 0,
+      0, 0, -2 / (far - near), 0,
+      -(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1
     ]);
     
-    // Update view matrix with camera
-    const zoom = this.camera.zoom;
+    // View matrix with camera position
     this.viewMatrix.set([
-      zoom, 0, 0, 0,
-      0, zoom, 0, 0,
+      1, 0, 0, 0,
+      0, 1, 0, 0,
       0, 0, 1, 0,
-      -this.camera.x * zoom, -this.camera.y * zoom, 0, 1
+      -this.camera.x, -this.camera.y, 0, 1
     ]);
+    
+    console.log(`Camera updated: pos(${this.camera.x}, ${this.camera.y}) zoom(${zoom}) viewport(${width}x${height})`);
+    console.log(`World bounds: left=${left.toFixed(1)} right=${right.toFixed(1)} top=${top.toFixed(1)} bottom=${bottom.toFixed(1)}`);
   }
 
   setCamera(x: number, y: number, zoom: number) {
