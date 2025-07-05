@@ -8,50 +8,77 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Silly Walks Color Palette */
+    /* Enhanced Silly Walks Color Palette - Ministry of Style Edition */
     --background: 45 100% 96%;
-    --foreground: 25 25% 15%;
+    --foreground: 25 30% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 25 25% 15%;
+    --card-foreground: 25 30% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 25 25% 15%;
+    --popover-foreground: 25 30% 12%;
 
-    /* Vibrant primary - inspired by British comedy */
+    /* Vibrant primary system - British comedy inspired */
     --primary: 15 85% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 15 95% 65%;
+    --primary-muted: 15 60% 75%;
+    --primary-subtle: 15 40% 92%;
 
-    /* Quirky secondary */
+    /* Sophisticated secondary palette */
     --secondary: 280 60% 65%;
     --secondary-foreground: 0 0% 100%;
+    --secondary-muted: 280 40% 80%;
+    --secondary-subtle: 280 30% 95%;
 
-    --muted: 25 15% 92%;
+    /* Enhanced muted system */
+    --muted: 25 15% 94%;
     --muted-foreground: 25 25% 45%;
+    --muted-darker: 25 20% 88%;
 
+    /* Refined accent system */
     --accent: 195 85% 60%;
     --accent-foreground: 0 0% 100%;
+    --accent-muted: 195 60% 80%;
+    --accent-subtle: 195 40% 95%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Enhanced semantic colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 25 20% 85%;
-    --input: 25 20% 90%;
+    /* Refined borders and inputs */
+    --border: 25 20% 88%;
+    --input: 25 20% 92%;
     --ring: 15 85% 55%;
 
-    /* Custom design tokens for Silly Walks */
+    /* Sophisticated gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
-    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(25 50% 88%));
+    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(25 40% 92%));
+    --gradient-subtle: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--muted-darker)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent-subtle)), hsl(var(--accent-muted)));
     
+    /* Enhanced shadows system */
     --shadow-glow: 0 0 30px hsl(var(--primary) / 0.3);
     --shadow-float: 0 10px 25px -5px hsl(var(--primary) / 0.2);
+    --shadow-soft: 0 4px 12px -2px hsl(var(--foreground) / 0.08);
+    --shadow-medium: 0 8px 20px -4px hsl(var(--foreground) / 0.12);
+    --shadow-strong: 0 16px 32px -8px hsl(var(--foreground) / 0.16);
     
+    /* Enhanced transition system */
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-snappy: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --transition-elastic: all 0.4s cubic-bezier(0.68, -0.6, 0.32, 1.6);
 
+    /* Refined radius system */
     --radius: 1rem;
+    --radius-sm: 0.5rem;
+    --radius-lg: 1.5rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -72,35 +99,55 @@ All colors MUST be HSL.
 
   .dark {
     --background: 25 15% 8%;
-    --foreground: 25 15% 92%;
+    --foreground: 25 15% 94%;
 
     --card: 25 20% 12%;
-    --card-foreground: 25 15% 92%;
+    --card-foreground: 25 15% 94%;
 
     --popover: 25 20% 12%;
-    --popover-foreground: 25 15% 92%;
+    --popover-foreground: 25 15% 94%;
 
+    /* Enhanced dark mode primary system */
     --primary: 15 85% 55%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 15 95% 65%;
+    --primary-muted: 15 50% 45%;
+    --primary-subtle: 15 30% 20%;
 
+    /* Dark mode secondary system */
     --secondary: 280 60% 65%;
     --secondary-foreground: 0 0% 100%;
+    --secondary-muted: 280 40% 45%;
+    --secondary-subtle: 280 25% 18%;
 
+    /* Enhanced dark muted system */
     --muted: 25 20% 15%;
-    --muted-foreground: 25 15% 65%;
+    --muted-foreground: 25 15% 70%;
+    --muted-darker: 25 25% 10%;
 
+    /* Dark accent system */
     --accent: 195 85% 60%;
     --accent-foreground: 0 0% 100%;
+    --accent-muted: 195 60% 45%;
+    --accent-subtle: 195 40% 18%;
 
-    --destructive: 0 62.8% 50%;
+    /* Dark semantic colors */
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 85% 55%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 25 20% 20%;
+    /* Dark borders and inputs */
+    --border: 25 20% 22%;
     --input: 25 20% 18%;
     --ring: 15 85% 55%;
     
+    /* Dark mode gradients */
     --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(25 20% 5%));
+    --gradient-subtle: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--muted-darker)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent-subtle)), hsl(var(--accent-muted)));
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -121,27 +168,104 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     background: var(--gradient-bg);
     min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   html {
     scroll-behavior: smooth;
   }
+  
+  /* Enhanced Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: 'liga', 'calt';
+  }
 }
 
 @layer components {
+  /* Enhanced Button System */
   .silly-button {
     @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground 
            shadow-lg hover:shadow-glow transform hover:scale-105 
-           transition-all duration-300 font-semibold;
+           transition-all duration-300 font-semibold
+           hover:from-primary-glow hover:to-primary
+           active:scale-95 active:shadow-md;
   }
   
+  .button-secondary {
+    @apply bg-gradient-to-r from-secondary to-secondary-muted text-secondary-foreground
+           shadow-md hover:shadow-lg transform hover:scale-105
+           transition-all duration-300 font-medium
+           hover:from-secondary-muted hover:to-secondary;
+  }
+  
+  .button-ghost {
+    @apply bg-transparent hover:bg-muted/60 text-foreground
+           backdrop-blur-sm border border-border/30
+           transition-all duration-200 hover:border-border/60
+           hover:shadow-soft;
+  }
+  
+  /* Enhanced Panel System */
   .workshop-panel {
-    @apply bg-card/90 backdrop-blur-sm border border-border/50 
-           rounded-2xl shadow-float;
+    @apply bg-card/95 backdrop-blur-md border border-border/50 
+           rounded-2xl shadow-float hover:shadow-medium
+           transition-all duration-300;
+  }
+  
+  .feature-panel {
+    @apply bg-gradient-subtle border border-border/30
+           rounded-xl shadow-soft hover:shadow-medium
+           transition-all duration-300 backdrop-blur-sm;
   }
   
   .creature-canvas {
-    @apply bg-gradient-to-br from-background to-muted/50 
-           border-2 border-primary/20 rounded-2xl shadow-inner;
+    @apply bg-gradient-to-br from-background to-muted/30 
+           border-2 border-primary/20 rounded-2xl shadow-inner
+           hover:border-primary/30 transition-all duration-300;
+  }
+  
+  /* Interactive Elements */
+  .hover-lift {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-medium;
+  }
+  
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-glow hover:border-primary/40;
+  }
+  
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 
+           focus-visible:ring-primary focus-visible:ring-offset-2
+           focus-visible:ring-offset-background;
+  }
+  
+  /* Typography Enhancements */
+  .heading-primary {
+    font-family: 'Playfair Display', serif;
+    @apply text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent
+           leading-tight tracking-tight;
+  }
+  
+  .heading-secondary {
+    font-family: 'Playfair Display', serif;
+    @apply text-2xl font-semibold text-foreground
+           leading-snug tracking-tight;
+  }
+  
+  .text-mono {
+    font-family: 'JetBrains Mono', monospace;
+    @apply text-sm font-medium text-muted-foreground
+           tracking-wide;
   }
 }

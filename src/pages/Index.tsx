@@ -41,17 +41,17 @@ const Index = () => {
     <div className="min-h-screen p-4 space-y-6">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent animate-silly-bounce">
+        <h1 className="heading-primary text-6xl animate-fade-in-up">
           The Minister of Silly Walks
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in-up [animation-delay:0.1s]">
           Design the most ridiculous walking patterns using advanced Walk-gorithm technology! 
           Adjust joint motors, timing, and style to create your masterpiece of movement.
         </p>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 animate-fade-in-up [animation-delay:0.2s]">
           <Button 
             onClick={handleTestWalk}
-            className="silly-button"
+            className="silly-button hover-lift"
             size="lg"
           >
             <Trophy className="w-5 h-5 mr-2" />
@@ -59,7 +59,7 @@ const Index = () => {
           </Button>
           <Button 
             onClick={() => setIsPlaying(!isPlaying)}
-            variant="outline"
+            className="button-ghost hover-lift"
             size="lg"
           >
             <Sparkles className="w-5 h-5 mr-2" />
@@ -67,7 +67,7 @@ const Index = () => {
           </Button>
           <Button 
             onClick={handleShare}
-            variant="outline"
+            className="button-ghost hover-lift"
             size="lg"
           >
             <Share2 className="w-5 h-5 mr-2" />
@@ -105,23 +105,45 @@ const Index = () => {
       </div>
 
       {/* Instructions */}
-      <div className="max-w-4xl mx-auto workshop-panel p-6">
-        <h2 className="text-2xl font-bold mb-4 text-primary">How to Create Silly Walks</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-          <div>
-            <h3 className="font-semibold mb-2 text-secondary">🦵 Hip & Knee Controls</h3>
-            <ul className="space-y-1 text-muted-foreground">
-              <li>• Adjust speed to control how fast joints move</li>
-              <li>• Set angle ranges for movement limits</li>
-              <li>• Phase offset creates leg coordination</li>
+      <div className="max-w-4xl mx-auto feature-panel p-8 animate-fade-in-up [animation-delay:0.4s]">
+        <h2 className="heading-secondary mb-6 text-center">How to Create Silly Walks</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-secondary">
+              🦵 Hip & Knee Controls
+            </h3>
+            <ul className="space-y-3 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Adjust speed to control how fast joints move</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Set angle ranges for movement limits</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary">•</span>
+                <span>Phase offset creates leg coordination</span>
+              </li>
             </ul>
           </div>
-          <div>
-            <h3 className="font-semibold mb-2 text-accent">🎨 Style Parameters</h3>
-            <ul className="space-y-1 text-muted-foreground">
-              <li>• Step interval controls overall walk timing</li>
-              <li>• Bounce intensity adds torso movement</li>
-              <li>• Arm swing adds upper body motion</li>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-accent">
+              🎨 Style Parameters
+            </h3>
+            <ul className="space-y-3 text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-accent">•</span>
+                <span>Step interval controls overall walk timing</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-accent">•</span>
+                <span>Bounce intensity adds torso movement</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-accent">•</span>
+                <span>Arm swing adds upper body motion</span>
+              </li>
             </ul>
           </div>
         </div>
