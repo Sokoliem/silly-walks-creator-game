@@ -1,12 +1,14 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
-import Matter from 'matter-js';
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import { CreatureBody, WalkParameters } from '@/types/walk';
 import { Level } from '@/types/level';
-import { RenderPipeline } from '@/rendering/core/RenderPipeline';
 import { usePhysicsEngine } from '@/hooks/usePhysicsEngine';
 import { useParticleEffects } from '@/hooks/useParticleEffects';
 import { useGameLogic } from '@/hooks/useGameLogic';
+import { useRenderPipeline } from '@/hooks/useRenderPipeline';
+import { useAnimationLoop } from '@/hooks/useAnimationLoop';
+import { useCanvasReset } from '@/hooks/useCanvasReset';
 import { ErrorBoundary } from './ErrorBoundary';
+import { CanvasLoadingOverlay } from './CanvasLoadingOverlay';
 
 interface AAARenderCanvasProps {
   walkParameters: WalkParameters;
@@ -28,8 +30,6 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
   className = "" 
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const renderPipelineRef = useRef<RenderPipeline | null>(null);
-  const [renderingReady, setRenderingReady] = useState(false);
   
   // Use custom hooks for separated concerns
   const { engine, creature, isInitialized, physicsState, error, resetCreature: resetPhysicsCreature } = usePhysicsEngine(
@@ -44,154 +44,39 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
     onDistanceUpdate
   );
 
-  // Initialize AAA rendering pipeline
-  useEffect(() => {
-    if (!canvasRef.current || !isInitialized || renderPipelineRef.current) return;
+  // Initialize rendering pipeline
+  const { renderPipeline, renderingReady, setRenderingReady } = useRenderPipeline(
+    canvasRef.current,
+    isInitialized,
+    creature,
+    level
+  );
 
-    const canvas = canvasRef.current;
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    
-    // Ensure canvas has proper dimensions before WebGL init
-    if (width === 0 || height === 0) {
-      console.warn('Canvas has zero dimensions, delaying render initialization');
-      return;
-    }
-    
-    // Set canvas resolution
-    canvas.width = width * window.devicePixelRatio;
-    canvas.height = height * window.devicePixelRatio;
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
+  // Initialize particle effects
+  const { updateParticleEffects } = useParticleEffects(renderPipeline);
 
-    try {
-      console.log('Creating AAA rendering pipeline...');
-      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
-      
-      // Create AAA rendering pipeline
-      const renderPipeline = new RenderPipeline(canvas);
-      renderPipelineRef.current = renderPipeline;
-      console.log('RenderPipeline created successfully');
-      
-      // Add terrain to renderer
-      if (level) {
-        console.log('Adding level terrain...');
-        level.terrain.forEach((terrain) => {
-          renderPipeline.addTerrain(
-            terrain.x, 
-            terrain.y, 
-            terrain.width, 
-            terrain.height, 
-            terrain.type === 'platform' ? 'platform' : 'ground'
-          );
-        });
+  // Initialize animation loop
+  useAnimationLoop(
+    isInitialized,
+    isPlaying,
+    walkParameters,
+    engine,
+    creature,
+    renderPipeline,
+    updateParticleEffects,
+    updateGameState
+  );
 
-        renderPipeline.addTerrain(
-          level.goal.x,
-          level.goal.y,
-          level.goal.width,
-          level.goal.height,
-          'goal'
-        );
-        console.log('Level terrain added');
-      } else {
-        console.log('Adding ground terrain...');
-        renderPipeline.addTerrain(0, height - 100, width, 100, 'ground');
-        console.log('Ground terrain added');
-      }
-      
-      // Add creature to renderer if available
-      if (creature) {
-        console.log('Adding creature to renderer...');
-        renderPipeline.addCreature(creature);
-        const startX = level ? 100 : width / 2;
-        const startY = level ? height - 200 : height / 2 - 100;
-        renderPipeline.setCamera(startX, startY - 100, 0.8);
-        renderPipeline.start();
-        console.log('Creature added and rendering started');
-      }
-      
-      console.log('AAA rendering pipeline initialization complete - setting rendering ready');
-      setRenderingReady(true);
-    } catch (error) {
-      console.error('Failed to initialize AAA rendering pipeline:', error);
-      console.error('Render error details:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Render error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      setRenderingReady(false);
-    }
-
-    return () => {
-      if (renderPipelineRef.current) {
-        renderPipelineRef.current.destroy();
-      }
-      setRenderingReady(false);
-    };
-  }, [isInitialized, creature, level]);
-
-  const { updateParticleEffects } = useParticleEffects(renderPipelineRef.current);
-
-  // Animation and physics loop
-  useEffect(() => {
-    if (!isInitialized || !engine || !creature || !renderPipelineRef.current) return;
-
-    let animationId: number;
-    
-    const animate = () => {
-      if (!engine || !creature || !renderPipelineRef.current) return;
-      
-      if (isPlaying) {
-        // Update physics
-        engine.updateCreatureWalk(creature, walkParameters, Date.now());
-        
-        // Update visual representation
-        renderPipelineRef.current.updateCreature(creature);
-        
-        // Camera following
-        renderPipelineRef.current.followCreature(creature, 0.05);
-
-        // Particle effects
-        updateParticleEffects(creature);
-
-        // Game logic
-        updateGameState(creature);
-      }
-      
-      // Step physics simulation
-      engine.step();
-      
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [isInitialized, isPlaying, walkParameters, engine, creature, updateParticleEffects, updateGameState]);
-
-  // Combined reset function
-  const resetCreature = () => {
-    resetPhysicsCreature();
-    resetGameState();
-    setRenderingReady(false);
-    
-    if (renderPipelineRef.current && creature) {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const width = canvas.clientWidth;
-        const height = canvas.clientHeight;
-        const resetX = level ? 100 : width / 2;
-        const resetY = level ? height - 200 : height / 2 - 100;
-        
-        renderPipelineRef.current.clear();
-        renderPipelineRef.current.addCreature(creature);
-        renderPipelineRef.current.setCamera(resetX, resetY - 100, 0.8);
-        setRenderingReady(true);
-      }
-    }
-  };
+  // Initialize reset functionality
+  const { resetCreature } = useCanvasReset(
+    canvasRef.current,
+    creature,
+    renderPipeline,
+    level,
+    resetPhysicsCreature,
+    resetGameState,
+    setRenderingReady
+  );
 
   // Expose reset function to parent via ref
   useImperativeHandle(ref, () => ({
@@ -207,40 +92,12 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
           style={{ minHeight: '400px' }}
         />
         
-        {(!isInitialized || !renderingReady) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
-            <div className="text-center">
-              <div className="animate-silly-bounce text-4xl mb-2">
-                {physicsState === 'error' ? '⚠️' : '🎮'}
-              </div>
-              <p className="text-muted-foreground">
-                {physicsState === 'error' ? 'Physics engine error' : 
-                 physicsState === 'initializing' ? 'Initializing physics engine...' :
-                 !isInitialized ? 'Preparing physics simulation...' : 
-                 'Loading AAA graphics engine...'}
-              </p>
-              {error && (
-                <p className="mt-1 text-sm text-destructive">
-                  {error}
-                </p>
-              )}
-              <div className="mt-2 text-sm text-accent">
-                {physicsState === 'error' ? 'Check console for details' :
-                 physicsState === 'initializing' ? 'Creating creatures and terrain...' :
-                 isInitialized ? 'WebGL renderer • Particle systems • Advanced shaders' : 
-                 'Physics simulation • Creature dynamics'}
-              </div>
-              {physicsState === 'initializing' && (
-                <div className="mt-3">
-                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">
-                    <div className="animate-spin w-3 h-3 border border-primary border-t-transparent rounded-full mr-2"></div>
-                    Setting up physics world...
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        <CanvasLoadingOverlay
+          isInitialized={isInitialized}
+          renderingReady={renderingReady}
+          physicsState={physicsState}
+          error={error}
+        />
       </div>
     </ErrorBoundary>
   );
