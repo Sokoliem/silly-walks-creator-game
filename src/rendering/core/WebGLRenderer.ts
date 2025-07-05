@@ -183,47 +183,35 @@ export class WebGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     
-    // TEST: Draw a simple red rectangle directly to verify WebGL is working
-    const testShader = this.shaderManager.getShader('solid');
-    if (testShader) {
-      gl.useProgram(testShader.program);
-      
-      // Set simple identity matrix for test
-      const testMatrix = new Float32Array([
-        0.5, 0, 0, 0,
-        0, 0.5, 0, 0,  
-        0, 0, 1, 0,
-        0, 0, 0, 1
-      ]);
-      
-      const mvpLocation = gl.getUniformLocation(testShader.program, 'u_mvpMatrix');
-      if (mvpLocation) {
-        gl.uniformMatrix4fv(mvpLocation, false, testMatrix);
-      }
-      
-      // Set bright red color
-      const colorLocation = gl.getUniformLocation(testShader.program, 'u_color');
-      if (colorLocation) {
-        gl.uniform4f(colorLocation, 1.0, 0.0, 0.0, 1.0);
-        console.log('TEST: Set red color uniform');
-      } else {
-        console.error('TEST: u_color uniform not found');
-      }
-      
-      // Draw test quad
-      this.renderQuad();
-      console.log('TEST: Drew test quad');
-    }
-    
     // Sort objects by layer for proper rendering order
     const sortedObjects = Array.from(this.renderObjects.values())
       .filter(obj => obj.visible)
       .sort((a, b) => a.layer - b.layer);
     
-    // Debug: Log render info every few seconds
+    // Debug: Log render info and transformed positions
     if (Date.now() % 3000 < 50) {
-      console.log(`WebGL Render: ${sortedObjects.length} objects, Canvas: ${this.canvas.width}x${this.canvas.height}, Camera: x=${this.camera.x}, y=${this.camera.y}, zoom=${this.camera.zoom}`);
-      sortedObjects.forEach(obj => console.log(`  - ${obj.id}: pos(${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}) scale(${obj.scale.x}, ${obj.scale.y}) material: ${obj.material}`));
+      console.log(`WebGL Render: ${sortedObjects.length} objects, Canvas: ${this.canvas.width}x${this.canvas.height}`);
+      console.log(`Camera: x=${this.camera.x}, y=${this.camera.y}, zoom=${this.camera.zoom}`);
+      
+      // Check where objects end up after transformation
+      sortedObjects.forEach(obj => {
+        const modelMatrix = this.createModelMatrix(obj);
+        const mvpMatrix = this.multiplyMatrices(
+          this.projectionMatrix,
+          this.multiplyMatrices(this.viewMatrix, modelMatrix)
+        );
+        
+        // Transform object center point
+        const worldPos = [obj.position.x, obj.position.y, 0, 1];
+        const clipPos = [
+          mvpMatrix[0] * worldPos[0] + mvpMatrix[4] * worldPos[1] + mvpMatrix[12],
+          mvpMatrix[1] * worldPos[0] + mvpMatrix[5] * worldPos[1] + mvpMatrix[13],
+          mvpMatrix[2] * worldPos[0] + mvpMatrix[6] * worldPos[1] + mvpMatrix[14],
+          mvpMatrix[3] * worldPos[0] + mvpMatrix[7] * worldPos[1] + mvpMatrix[15]
+        ];
+        
+        console.log(`  ${obj.id}: world(${obj.position.x.toFixed(1)}, ${obj.position.y.toFixed(1)}) -> clip(${clipPos[0].toFixed(2)}, ${clipPos[1].toFixed(2)}) material: ${obj.material}`);
+      });
     }
     
     // Render each object
