@@ -10,6 +10,11 @@ export interface RenderObject {
   material?: string;
   layer: number;
   visible: boolean;
+  baseTransform?: {
+    position: { x: number; y: number };
+    rotation: number;
+    scale: { x: number; y: number };
+  };
 }
 
 export class WebGLRenderer {

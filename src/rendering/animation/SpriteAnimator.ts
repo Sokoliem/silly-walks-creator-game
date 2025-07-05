@@ -134,11 +134,27 @@ export class SpriteAnimator {
         const frameProgress = (normalizedTime - frameTime) / frame.duration;
         const t = this.smoothstep(frameProgress);
 
-        renderObject.position.x += this.lerp(frame.offset.x, nextFrame.offset.x, t);
-        renderObject.position.y += this.lerp(frame.offset.y, nextFrame.offset.y, t);
-        renderObject.rotation += this.lerp(frame.rotation, nextFrame.rotation, t);
-        renderObject.scale.x *= this.lerp(frame.scale.x, nextFrame.scale.x, t);
-        renderObject.scale.y *= this.lerp(frame.scale.y, nextFrame.scale.y, t);
+        // Store base transform if not exists
+        if (!renderObject.baseTransform) {
+          renderObject.baseTransform = {
+            position: { x: renderObject.position.x, y: renderObject.position.y },
+            rotation: renderObject.rotation,
+            scale: { x: renderObject.scale.x, y: renderObject.scale.y }
+          };
+        }
+
+        // Apply animation offset to base transform (not accumulative)
+        const offsetX = this.lerp(frame.offset.x, nextFrame.offset.x, t);
+        const offsetY = this.lerp(frame.offset.y, nextFrame.offset.y, t);
+        const rotationOffset = this.lerp(frame.rotation, nextFrame.rotation, t);
+        const scaleX = this.lerp(frame.scale.x, nextFrame.scale.x, t);
+        const scaleY = this.lerp(frame.scale.y, nextFrame.scale.y, t);
+
+        renderObject.position.x = renderObject.baseTransform.position.x + offsetX;
+        renderObject.position.y = renderObject.baseTransform.position.y + offsetY;
+        renderObject.rotation = renderObject.baseTransform.rotation + rotationOffset;
+        renderObject.scale.x = renderObject.baseTransform.scale.x * scaleX;
+        renderObject.scale.y = renderObject.baseTransform.scale.y * scaleY;
       }
 
       animData.currentFrame = currentFrame;
