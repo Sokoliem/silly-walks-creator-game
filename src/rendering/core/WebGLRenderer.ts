@@ -172,6 +172,38 @@ export class WebGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     
+    // TEST: Draw a simple red rectangle directly to verify WebGL is working
+    const testShader = this.shaderManager.getShader('solid');
+    if (testShader) {
+      gl.useProgram(testShader.program);
+      
+      // Set simple identity matrix for test
+      const testMatrix = new Float32Array([
+        0.5, 0, 0, 0,
+        0, 0.5, 0, 0,  
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ]);
+      
+      const mvpLocation = gl.getUniformLocation(testShader.program, 'u_mvpMatrix');
+      if (mvpLocation) {
+        gl.uniformMatrix4fv(mvpLocation, false, testMatrix);
+      }
+      
+      // Set bright red color
+      const colorLocation = gl.getUniformLocation(testShader.program, 'u_color');
+      if (colorLocation) {
+        gl.uniform4f(colorLocation, 1.0, 0.0, 0.0, 1.0);
+        console.log('TEST: Set red color uniform');
+      } else {
+        console.error('TEST: u_color uniform not found');
+      }
+      
+      // Draw test quad
+      this.renderQuad();
+      console.log('TEST: Drew test quad');
+    }
+    
     // Sort objects by layer for proper rendering order
     const sortedObjects = Array.from(this.renderObjects.values())
       .filter(obj => obj.visible)
