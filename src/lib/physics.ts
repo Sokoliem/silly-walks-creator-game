@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import { CreatureBody, WalkParameters } from '@/types/walk';
+import { Level, TerrainElement } from '@/types/level';
 
 export class PhysicsEngine {
   public engine: Matter.Engine;
@@ -34,6 +35,98 @@ export class PhysicsEngine {
     Matter.Render.run(this.render);
   }
   
+  createLevel(level: Level, width: number, height: number) {
+    // Create terrain elements
+    level.terrain.forEach((element) => {
+      this.createTerrainElement(element, height);
+    });
+
+    // Create goal zone (visual indicator)
+    const goalZone = Matter.Bodies.rectangle(
+      level.goal.x + level.goal.width / 2,
+      level.goal.y + level.goal.height / 2,
+      level.goal.width,
+      level.goal.height,
+      {
+        isStatic: true,
+        isSensor: true, // Won't collide but can detect
+        render: {
+          fillStyle: '#00FF00',
+          strokeStyle: '#00AA00',
+          lineWidth: 3
+        }
+      }
+    );
+
+    Matter.World.add(this.world, goalZone);
+    return goalZone;
+  }
+
+  private createTerrainElement(element: TerrainElement, canvasHeight: number) {
+    let body;
+
+    switch (element.type) {
+      case 'platform':
+        body = Matter.Bodies.rectangle(
+          element.x + element.width / 2,
+          element.y + element.height / 2,
+          element.width,
+          element.height,
+          {
+            isStatic: true,
+            render: {
+              fillStyle: element.color || '#8B4513'
+            }
+          }
+        );
+        break;
+
+      case 'ramp':
+        // Create angled rectangle for ramp
+        body = Matter.Bodies.rectangle(
+          element.x + element.width / 2,
+          element.y + element.height / 2,
+          element.width,
+          element.height,
+          {
+            isStatic: true,
+            render: {
+              fillStyle: element.color || '#CD853F'
+            }
+          }
+        );
+        if (element.angle) {
+          Matter.Body.setAngle(body, (element.angle * Math.PI) / 180);
+        }
+        break;
+
+      case 'moving_platform':
+        body = Matter.Bodies.rectangle(
+          element.x + element.width / 2,
+          element.y + element.height / 2,
+          element.width,
+          element.height,
+          {
+            isStatic: false, // Can move
+            render: {
+              fillStyle: element.color || '#DAA520'
+            }
+          }
+        );
+        // Add simple oscillating movement (can be enhanced later)
+        break;
+
+      default:
+        return;
+    }
+
+    if (body) {
+      Matter.World.add(this.world, body);
+    }
+
+    return body;
+  }
+
   createGround(width: number, height: number) {
     const ground = Matter.Bodies.rectangle(
       width / 2, 

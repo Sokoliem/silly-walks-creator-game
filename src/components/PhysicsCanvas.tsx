@@ -1,26 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import Matter from 'matter-js';
 import { PhysicsEngine } from '@/lib/physics';
 import { CreatureBody, WalkParameters } from '@/types/walk';
+import { Level } from '@/types/level';
 
 interface PhysicsCanvasProps {
   walkParameters: WalkParameters;
   isPlaying: boolean;
   onCreatureCreated?: (creature: CreatureBody) => void;
+  level?: Level; // Optional level for gameplay mode
+  onGameComplete?: (success: boolean, finalDistance: number) => void;
+  onDistanceUpdate?: (distance: number, maxDistance: number) => void;
   className?: string;
 }
 
-export const PhysicsCanvas = ({ 
+export const PhysicsCanvas = forwardRef<any, PhysicsCanvasProps>(({ 
   walkParameters, 
   isPlaying, 
   onCreatureCreated,
+  level,
+  onGameComplete,
+  onDistanceUpdate,
   className = "" 
-}: PhysicsCanvasProps) => {
+}, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<PhysicsEngine | null>(null);
   const creatureRef = useRef<CreatureBody | null>(null);
   const animationRef = useRef<number>();
   const timeRef = useRef<number>(0);
+  const distanceRef = useRef<number>(0);
+  const maxDistanceRef = useRef<number>(0);
   
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -45,11 +54,17 @@ export const PhysicsCanvas = ({
     // Setup renderer
     engine.setupRenderer(canvas, width, height);
     
-    // Create ground
-    engine.createGround(width, height);
+    // Create ground and level terrain
+    if (level) {
+      engine.createLevel(level, width, height);
+    } else {
+      engine.createGround(width, height);
+    }
     
     // Create creature
-    const creature = engine.createCreature(width / 2, height / 2 - 100);
+    const startX = level ? 100 : width / 2;
+    const startY = level ? height - 200 : height / 2 - 100;
+    const creature = engine.createCreature(startX, startY);
     creatureRef.current = creature;
     
     if (onCreatureCreated) {
@@ -79,6 +94,27 @@ export const PhysicsCanvas = ({
           walkParameters, 
           timeRef.current
         );
+
+        // Check distance and goal completion for level mode
+        if (level && creatureRef.current) {
+          const creatureX = creatureRef.current.torso.position.x;
+          const distance = Math.max(0, creatureX - 100); // Starting position
+          distanceRef.current = distance;
+          maxDistanceRef.current = Math.max(maxDistanceRef.current, distance);
+          
+          if (onDistanceUpdate) {
+            onDistanceUpdate(distance, maxDistanceRef.current);
+          }
+
+          // Check goal completion
+          const goalReached = creatureX >= level.goal.x && 
+                            creatureX <= level.goal.x + level.goal.width &&
+                            maxDistanceRef.current >= level.goal.minDistance;
+          
+          if (goalReached && onGameComplete) {
+            onGameComplete(true, maxDistanceRef.current);
+          }
+        }
       }
       
       engineRef.current.step();
@@ -94,7 +130,7 @@ export const PhysicsCanvas = ({
     };
   }, [isInitialized, isPlaying, walkParameters]);
 
-  // Reset creature position when needed
+  // Reset creature position for level mode
   const resetCreature = () => {
     if (!engineRef.current || !creatureRef.current || !canvasRef.current) return;
     
@@ -104,8 +140,8 @@ export const PhysicsCanvas = ({
     
     // Reset creature position
     const creature = creatureRef.current;
-    const resetX = width / 2;
-    const resetY = height / 2 - 100;
+    const resetX = level ? 100 : width / 2;
+    const resetY = level ? height - 200 : height / 2 - 100;
     
     // Reset all body positions and velocities
     const bodies = [
@@ -129,9 +165,16 @@ export const PhysicsCanvas = ({
     });
     
     timeRef.current = 0;
+    distanceRef.current = 0;
+    maxDistanceRef.current = 0;
   };
 
-  // Expose reset function to parent
+  // Expose reset function to parent via ref
+  useImperativeHandle(ref, () => ({
+    resetCreature
+  }));
+
+  // Also expose via canvas for backward compatibility
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -157,4 +200,4 @@ export const PhysicsCanvas = ({
       )}
     </div>
   );
-};
+});

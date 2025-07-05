@@ -1,12 +1,14 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WalkEditor } from '@/components/WalkEditor';
 import { PhysicsCanvas } from '@/components/PhysicsCanvas';
 import { Button } from '@/components/ui/button';
 import { DEFAULT_WALK_PARAMETERS, WalkParameters, CreatureBody } from '@/types/walk';
-import { Sparkles, Share2 } from 'lucide-react';
+import { Sparkles, Share2, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [walkParameters, setWalkParameters] = useState<WalkParameters>(DEFAULT_WALK_PARAMETERS);
   const [isPlaying, setIsPlaying] = useState(false);
   const [creature, setCreature] = useState<CreatureBody | null>(null);
@@ -31,6 +33,10 @@ const Index = () => {
     toast("Walk algorithm copied to clipboard! Share it with friends!");
   };
 
+  const handleTestWalk = () => {
+    navigate('/level-select', { state: { walkParameters } });
+  };
+
   return (
     <div className="min-h-screen p-4 space-y-6">
       {/* Header */}
@@ -44,12 +50,20 @@ const Index = () => {
         </p>
         <div className="flex justify-center gap-4">
           <Button 
-            onClick={() => setIsPlaying(!isPlaying)}
+            onClick={handleTestWalk}
             className="silly-button"
             size="lg"
           >
+            <Trophy className="w-5 h-5 mr-2" />
+            Test Walk!
+          </Button>
+          <Button 
+            onClick={() => setIsPlaying(!isPlaying)}
+            variant="outline"
+            size="lg"
+          >
             <Sparkles className="w-5 h-5 mr-2" />
-            {isPlaying ? 'Stop Walking' : 'Start Walking'}
+            {isPlaying ? 'Stop Preview' : 'Preview Walk'}
           </Button>
           <Button 
             onClick={handleShare}
