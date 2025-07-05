@@ -235,22 +235,17 @@ export class WebGLRenderer {
     
     const shader = this.shaderManager.getShader(shaderName);
     if (!shader) {
-      console.warn(`Shader not found: ${shaderName} for object ${obj.id}`);
+      console.error(`RENDER ERROR: Shader not found: ${shaderName} for object ${obj.id}`);
       return;
     }
-    
-    // Debug: Log shader usage
-    if (Date.now() % 2000 < 50) {
-      console.log(`Rendering ${obj.id}: shader=${shaderName}, material=${obj.material}, hasShader=${!!shader}`);
-    }
-    
-    gl.useProgram(shader.program);
     
     // Check if program is valid
     if (!gl.getProgramParameter(shader.program, gl.LINK_STATUS)) {
-      console.error(`Shader program not linked for ${shaderName}:`, gl.getProgramInfoLog(shader.program));
+      console.error(`RENDER ERROR: Shader program not linked for ${shaderName}:`, gl.getProgramInfoLog(shader.program));
       return;
     }
+    
+    gl.useProgram(shader.program);
     
     // Set up transformation matrix
     const modelMatrix = this.createModelMatrix(obj);
@@ -263,6 +258,9 @@ export class WebGLRenderer {
     const mvpLocation = gl.getUniformLocation(shader.program, 'u_mvpMatrix');
     if (mvpLocation) {
       gl.uniformMatrix4fv(mvpLocation, false, mvpMatrix);
+    } else {
+      console.error(`RENDER ERROR: u_mvpMatrix uniform not found in shader ${shaderName}`);
+      return;
     }
     
     // Set time uniform for animated shaders
@@ -281,20 +279,21 @@ export class WebGLRenderer {
     // Bind material properties or fallback
     if (material) {
       this.materialSystem.bindMaterial(material, shader.program);
+      console.log(`RENDER: ${obj.id} using material ${obj.material} with shader ${shaderName}`);
     } else {
       // Fallback color for unknown materials
       this.setFallbackColor(shader.program, obj.material || 'ground');
+      console.log(`RENDER: ${obj.id} using fallback color for material ${obj.material}`);
     }
     
     // Render quad (sprite)
+    console.log(`RENDER: Drawing ${obj.id} at world(${obj.position.x}, ${obj.position.y}) scale(${obj.scale.x}, ${obj.scale.y})`);
     this.renderQuad();
     
-    // Check for WebGL errors (only in debug mode)
-    if (console.assert) {
-      const error = gl.getError();
-      if (error !== gl.NO_ERROR) {
-        console.error(`WebGL error rendering object ${obj.id}:`, error);
-      }
+    // Check for WebGL errors after each draw
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) {
+      console.error(`RENDER ERROR: WebGL error rendering object ${obj.id}:`, error);
     }
   }
   
