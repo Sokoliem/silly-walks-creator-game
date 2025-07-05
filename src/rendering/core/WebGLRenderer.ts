@@ -23,11 +23,18 @@ export class WebGLRenderer {
   private camera: { x: number; y: number; zoom: number };
 
   constructor(canvas: HTMLCanvasElement) {
+    console.log('Initializing WebGLRenderer...');
     this.canvas = canvas;
     const gl = canvas.getContext('webgl2');
     if (!gl) {
-      throw new Error('WebGL2 not supported');
+      console.error('WebGL2 not supported, trying WebGL1...');
+      const gl1 = canvas.getContext('webgl');
+      if (!gl1) {
+        throw new Error('Neither WebGL2 nor WebGL1 is supported');
+      }
+      throw new Error('WebGL2 not supported, but WebGL1 is available. Need to implement WebGL1 fallback.');
     }
+    console.log('WebGL2 context created successfully');
     this.gl = gl;
     
     this.shaderManager = new ShaderManager(gl);

@@ -57,12 +57,17 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
     canvas.style.height = height + 'px';
 
     try {
+      console.log('Creating AAA rendering pipeline...');
+      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+      
       // Create AAA rendering pipeline
       const renderPipeline = new RenderPipeline(canvas);
       renderPipelineRef.current = renderPipeline;
+      console.log('RenderPipeline created successfully');
       
       // Add terrain to renderer
       if (level) {
+        console.log('Adding level terrain...');
         level.terrain.forEach((terrain) => {
           renderPipeline.addTerrain(
             terrain.x, 
@@ -80,20 +85,28 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
           level.goal.height,
           'goal'
         );
+        console.log('Level terrain added');
       } else {
+        console.log('Adding ground terrain...');
         renderPipeline.addTerrain(0, height - 100, width, 100, 'ground');
+        console.log('Ground terrain added');
       }
       
       // Add creature to renderer if available
       if (creature) {
+        console.log('Adding creature to renderer...');
         renderPipeline.addCreature(creature);
         const startX = level ? 100 : width / 2;
         const startY = level ? height - 200 : height / 2 - 100;
         renderPipeline.setCamera(startX, startY - 100, 0.8);
         renderPipeline.start();
+        console.log('Creature added and rendering started');
       }
+      console.log('AAA rendering pipeline initialization complete');
     } catch (error) {
       console.error('Failed to initialize AAA rendering pipeline:', error);
+      console.error('Render error details:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Render error stack:', error instanceof Error ? error.stack : 'No stack trace');
     }
 
     return () => {

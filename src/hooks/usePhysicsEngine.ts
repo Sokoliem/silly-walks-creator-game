@@ -20,15 +20,19 @@ export const usePhysicsEngine = (
     const height = canvas.clientHeight;
 
     try {
+      console.log('Initializing physics engine...');
       // Create physics engine (headless - no visual rendering)
       const engine = new PhysicsEngine();
       engineRef.current = engine;
+      console.log('Physics engine created successfully');
       
       // Create level terrain
       if (level) {
         engine.createLevel(level, width, height);
+        console.log('Level terrain created');
       } else {
         engine.createGround(width, height);
+        console.log('Ground created');
       }
       
       // Create creature
@@ -36,14 +40,18 @@ export const usePhysicsEngine = (
       const startY = level ? height - 200 : height / 2 - 100;
       const creature = engine.createCreature(startX, startY);
       creatureRef.current = creature;
+      console.log('Creature created successfully');
       
       if (onCreatureCreated) {
         onCreatureCreated(creature);
       }
       
+      console.log('Physics initialization complete - setting initialized to true');
       setIsInitialized(true);
     } catch (error) {
       console.error('Failed to initialize physics engine:', error);
+      console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       setIsInitialized(false);
     }
 
