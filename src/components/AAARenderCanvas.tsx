@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import Matter from 'matter-js';
 import { CreatureBody, WalkParameters } from '@/types/walk';
 import { Level } from '@/types/level';
@@ -29,6 +29,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderPipelineRef = useRef<RenderPipeline | null>(null);
+  const [renderingReady, setRenderingReady] = useState(false);
   
   // Use custom hooks for separated concerns
   const { engine, creature, isInitialized, resetCreature: resetPhysicsCreature } = usePhysicsEngine(
@@ -50,6 +51,12 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
     const canvas = canvasRef.current;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
+    
+    // Ensure canvas has proper dimensions before WebGL init
+    if (width === 0 || height === 0) {
+      console.warn('Canvas has zero dimensions, delaying render initialization');
+      return;
+    }
     
     // Set canvas resolution
     canvas.width = width * window.devicePixelRatio;
@@ -103,17 +110,21 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
         renderPipeline.start();
         console.log('Creature added and rendering started');
       }
-      console.log('AAA rendering pipeline initialization complete');
+      
+      console.log('AAA rendering pipeline initialization complete - setting rendering ready');
+      setRenderingReady(true);
     } catch (error) {
       console.error('Failed to initialize AAA rendering pipeline:', error);
       console.error('Render error details:', error instanceof Error ? error.message : 'Unknown error');
       console.error('Render error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      setRenderingReady(false);
     }
 
     return () => {
       if (renderPipelineRef.current) {
         renderPipelineRef.current.destroy();
       }
+      setRenderingReady(false);
     };
   }, [isInitialized, creature, level]);
 
@@ -164,6 +175,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
   const resetCreature = () => {
     resetPhysicsCreature();
     resetGameState();
+    setRenderingReady(false);
     
     if (renderPipelineRef.current && creature) {
       const canvas = canvasRef.current;
@@ -176,6 +188,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
         renderPipelineRef.current.clear();
         renderPipelineRef.current.addCreature(creature);
         renderPipelineRef.current.setCamera(resetX, resetY - 100, 0.8);
+        setRenderingReady(true);
       }
     }
   };
@@ -194,13 +207,15 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
           style={{ minHeight: '400px' }}
         />
         
-        {!isInitialized && (
+        {(!isInitialized || !renderingReady) && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
             <div className="text-center">
               <div className="animate-silly-bounce text-4xl mb-2">🎮</div>
-              <p className="text-muted-foreground">Loading AAA graphics engine...</p>
+              <p className="text-muted-foreground">
+                {!isInitialized ? 'Loading physics engine...' : 'Loading AAA graphics engine...'}
+              </p>
               <div className="mt-2 text-sm text-accent">
-                WebGL renderer • Particle systems • Advanced shaders
+                {isInitialized ? 'WebGL renderer • Particle systems • Advanced shaders' : 'Physics simulation • Creature dynamics'}
               </div>
             </div>
           </div>
