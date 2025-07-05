@@ -1,10 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WalkEditor } from '@/components/WalkEditor';
 import { PhysicsCanvas } from '@/components/PhysicsCanvas';
 import { Button } from '@/components/ui/button';
+import { TutorialModal } from '@/components/ui/tutorial-modal';
+import { NotificationManager } from '@/components/ui/smart-notification';
+import { PerformanceAnalyzer } from '@/components/ui/performance-analyzer';
 import { DEFAULT_WALK_PARAMETERS, WalkParameters, CreatureBody } from '@/types/walk';
-import { Sparkles, Share2, Trophy } from 'lucide-react';
+import { useTutorial } from '@/hooks/useTutorial';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Sparkles, Share2, Trophy, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Index = () => {
@@ -13,6 +18,10 @@ const Index = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [creature, setCreature] = useState<CreatureBody | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Tutorial and notifications
+  const tutorial = useTutorial();
+  const notifications = useNotifications();
 
   const handleReset = () => {
     setWalkParameters(DEFAULT_WALK_PARAMETERS);
@@ -34,6 +43,10 @@ const Index = () => {
   };
 
   const handleTestWalk = () => {
+    notifications.showSuccess(
+      "Ready for Testing!",
+      "Your walk algorithm is ready to face the challenges ahead!"
+    );
     navigate('/level-select', { state: { walkParameters } });
   };
 
@@ -73,6 +86,14 @@ const Index = () => {
             <Share2 className="w-5 h-5 mr-2" />
             Share Walk
           </Button>
+          <Button 
+            onClick={tutorial.startTutorial}
+            className="button-ghost hover-lift"
+            size="lg"
+          >
+            <HelpCircle className="w-5 h-5 mr-2" />
+            Tutorial
+          </Button>
         </div>
       </div>
 
@@ -90,6 +111,13 @@ const Index = () => {
           <div className="text-center text-sm text-muted-foreground">
             Watch your silly walker attempt to traverse the world with your custom algorithm!
           </div>
+          
+          {/* Performance Analysis */}
+          <PerformanceAnalyzer 
+            parameters={walkParameters}
+            isRealTime={isPlaying}
+            className="animate-fade-in-up [animation-delay:0.3s]"
+          />
         </div>
 
         {/* Walk Editor */}
@@ -148,6 +176,20 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* Tutorial Modal */}
+      <TutorialModal
+        isOpen={tutorial.isOpen}
+        onClose={tutorial.closeTutorial}
+        onComplete={tutorial.completeTutorial}
+        steps={tutorial.steps}
+      />
+      
+      {/* Smart Notifications */}
+      <NotificationManager
+        notifications={notifications.notifications}
+        onDismiss={notifications.removeNotification}
+      />
     </div>
   );
 };
