@@ -32,7 +32,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
   const [renderingReady, setRenderingReady] = useState(false);
   
   // Use custom hooks for separated concerns
-  const { engine, creature, isInitialized, resetCreature: resetPhysicsCreature } = usePhysicsEngine(
+  const { engine, creature, isInitialized, physicsState, error, resetCreature: resetPhysicsCreature } = usePhysicsEngine(
     canvasRef.current,
     level,
     onCreatureCreated
@@ -210,13 +210,34 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
         {(!isInitialized || !renderingReady) && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
             <div className="text-center">
-              <div className="animate-silly-bounce text-4xl mb-2">🎮</div>
-              <p className="text-muted-foreground">
-                {!isInitialized ? 'Loading physics engine...' : 'Loading AAA graphics engine...'}
-              </p>
-              <div className="mt-2 text-sm text-accent">
-                {isInitialized ? 'WebGL renderer • Particle systems • Advanced shaders' : 'Physics simulation • Creature dynamics'}
+              <div className="animate-silly-bounce text-4xl mb-2">
+                {physicsState === 'error' ? '⚠️' : '🎮'}
               </div>
+              <p className="text-muted-foreground">
+                {physicsState === 'error' ? 'Physics engine error' : 
+                 physicsState === 'initializing' ? 'Initializing physics engine...' :
+                 !isInitialized ? 'Preparing physics simulation...' : 
+                 'Loading AAA graphics engine...'}
+              </p>
+              {error && (
+                <p className="mt-1 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+              <div className="mt-2 text-sm text-accent">
+                {physicsState === 'error' ? 'Check console for details' :
+                 physicsState === 'initializing' ? 'Creating creatures and terrain...' :
+                 isInitialized ? 'WebGL renderer • Particle systems • Advanced shaders' : 
+                 'Physics simulation • Creature dynamics'}
+              </div>
+              {physicsState === 'initializing' && (
+                <div className="mt-3">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs">
+                    <div className="animate-spin w-3 h-3 border border-primary border-t-transparent rounded-full mr-2"></div>
+                    Setting up physics world...
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
