@@ -3,6 +3,7 @@ import Matter from 'matter-js';
 import { PhysicsEngine } from '@/lib/physics';
 import { CreatureBody, WalkParameters } from '@/types/walk';
 import { Level } from '@/types/level';
+import { AAARenderCanvas } from './AAARenderCanvas';
 
 interface PhysicsCanvasProps {
   walkParameters: WalkParameters;
@@ -182,22 +183,17 @@ export const PhysicsCanvas = forwardRef<any, PhysicsCanvasProps>(({
     }
   }, []);
 
+  // Use AAA renderer for enhanced graphics
   return (
-    <div className={`creature-canvas ${className}`}>
-      <canvas 
-        ref={canvasRef}
-        className="w-full h-full rounded-2xl"
-        style={{ minHeight: '400px' }}
-      />
-      
-      {!isInitialized && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-2xl">
-          <div className="text-center">
-            <div className="animate-silly-bounce text-4xl mb-2">🚶‍♂️</div>
-            <p className="text-muted-foreground">Loading physics engine...</p>
-          </div>
-        </div>
-      )}
-    </div>
+    <AAARenderCanvas
+      ref={ref}
+      walkParameters={walkParameters}
+      isPlaying={isPlaying}
+      onCreatureCreated={onCreatureCreated}
+      level={level}
+      onGameComplete={onGameComplete}
+      onDistanceUpdate={onDistanceUpdate}
+      className={className}
+    />
   );
 });
