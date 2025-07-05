@@ -91,8 +91,11 @@ export const VisualTimeline = ({ parameters, isPlaying, onPlayToggle }: VisualTi
 
     const animate = () => {
       if (isPlaying) {
-        setCurrentTime(prev => prev + 0.016); // 60fps
-        drawTimeline(currentTime);
+        setCurrentTime(prev => {
+          const newTime = prev + 0.016; // 60fps
+          drawTimeline(newTime);
+          return newTime;
+        });
         animationRef.current = requestAnimationFrame(animate);
       } else {
         drawTimeline(currentTime);
@@ -106,7 +109,7 @@ export const VisualTimeline = ({ parameters, isPlaying, onPlayToggle }: VisualTi
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [parameters, isPlaying, currentTime]);
+  }, [parameters, isPlaying]);
 
   return (
     <Card className="p-4 space-y-4">
