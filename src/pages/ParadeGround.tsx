@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PhysicsCanvas } from '@/components/PhysicsCanvas';
 import { GameHUD } from '@/components/GameHUD';
 import { ArrowLeft, RotateCcw, Play, Pause, Trophy, Star } from 'lucide-react';
+import { EnvironmentalIndicator } from '@/components/EnvironmentalIndicator';
 import { LEVELS } from '@/data/levels';
 import { useProgress } from '@/hooks/useProgress';
 import { WalkParameters, DEFAULT_WALK_PARAMETERS } from '@/types/walk';
@@ -191,6 +192,13 @@ const ParadeGround = () => {
           </Button>
         </div>
       </div>
+
+      {/* Environmental Effects Indicator */}
+      {level.environment && level.environment.length > 0 && (
+        <div className="max-w-7xl mx-auto">
+          <EnvironmentalIndicator effects={level.environment} />
+        </div>
+      )}
 
       {/* Game HUD */}
       {gameSession && (

@@ -1,15 +1,18 @@
 import Matter from 'matter-js';
 import { CreatureBody, WalkParameters } from '@/types/walk';
 import { Level, TerrainElement } from '@/types/level';
+import { AdvancedPhysicsEngine } from './advancedPhysics';
 
 export class PhysicsEngine {
   public engine: Matter.Engine;
   public world: Matter.World;
   public render?: Matter.Render;
+  public advancedPhysics: AdvancedPhysicsEngine;
   
   constructor() {
     this.engine = Matter.Engine.create();
     this.world = this.engine.world;
+    this.advancedPhysics = new AdvancedPhysicsEngine();
     
     // Configure physics world
     this.engine.world.gravity.y = 0.8;
@@ -36,10 +39,41 @@ export class PhysicsEngine {
   }
   
   createLevel(level: Level, width: number, height: number) {
+    // Set up environmental effects
+    if (level.environment) {
+      this.advancedPhysics.setEnvironmentalEffects(level.environment);
+    }
+
     // Create terrain elements
     level.terrain.forEach((element) => {
-      this.createTerrainElement(element, height);
+      // Try advanced terrain first, fall back to basic terrain
+      const advancedTerrain = this.advancedPhysics.createAdvancedTerrain(element, this.world);
+      if (!advancedTerrain) {
+        this.createTerrainElement(element, height);
+      }
     });
+
+    // Create checkpoints if they exist
+    if (level.checkpoints) {
+      level.checkpoints.forEach((checkpoint) => {
+        const checkpointBody = Matter.Bodies.rectangle(
+          checkpoint.x + checkpoint.width / 2,
+          checkpoint.y + checkpoint.height / 2,
+          checkpoint.width,
+          checkpoint.height,
+          {
+            isStatic: true,
+            isSensor: true,
+            render: {
+              fillStyle: checkpoint.activated ? '#32CD32' : '#FFD700',
+              strokeStyle: '#FFA500',
+              lineWidth: 2
+            }
+          }
+        );
+        Matter.World.add(this.world, checkpointBody);
+      });
+    }
 
     // Create goal zone (visual indicator)
     const goalZone = Matter.Bodies.rectangle(
@@ -272,6 +306,9 @@ export class PhysicsEngine {
     const t = time / 1000; // Convert to seconds
     const cycleProgress = (t / params.stepInterval) % (2 * Math.PI);
     
+    // Apply environmental effects
+    this.advancedPhysics.applyEnvironmentalEffects(creature, 1/60);
+    
     // Calculate target angles for joints based on sine waves
     const leftHipAngle = this.lerp(
       params.hipAngleRange[0],
@@ -367,6 +404,7 @@ export class PhysicsEngine {
   
   destroy() {
     this.clear();
+    this.advancedPhysics.destroy();
     if (this.render) {
       this.render.canvas.remove();
     }
