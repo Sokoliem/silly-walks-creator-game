@@ -31,9 +31,15 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
+  console.log('AAARenderCanvas: Rendering component', { 
+    hasCanvasRef: !!canvasRef.current,
+    canvasRefWidth: canvasRef.current?.clientWidth,
+    canvasRefHeight: canvasRef.current?.clientHeight
+  });
+  
   // Use custom hooks for separated concerns
   const { engine, creature, isInitialized, physicsState, error, resetCreature: resetPhysicsCreature } = usePhysicsEngine(
-    canvasRef.current,
+    canvasRef,
     level,
     onCreatureCreated
   );
@@ -46,7 +52,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
 
   // Initialize rendering pipeline
   const { renderPipeline, renderingReady, setRenderingReady } = useRenderPipeline(
-    canvasRef.current,
+    canvasRef,
     isInitialized,
     creature,
     level
@@ -69,7 +75,7 @@ export const AAARenderCanvas = forwardRef<any, AAARenderCanvasProps>(({
 
   // Initialize reset functionality
   const { resetCreature } = useCanvasReset(
-    canvasRef.current,
+    canvasRef,
     creature,
     renderPipeline,
     level,

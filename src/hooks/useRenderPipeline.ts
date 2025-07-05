@@ -4,7 +4,7 @@ import { CreatureBody } from '@/types/walk';
 import { Level } from '@/types/level';
 
 export const useRenderPipeline = (
-  canvas: HTMLCanvasElement | null,
+  canvasRef: React.RefObject<HTMLCanvasElement>,
   isInitialized: boolean,
   creature: CreatureBody | null,
   level?: Level
@@ -13,6 +13,13 @@ export const useRenderPipeline = (
   const [renderingReady, setRenderingReady] = useState(false);
 
   useEffect(() => {
+    console.log('useRenderPipeline: Effect triggered', { 
+      hasCanvas: !!canvasRef.current, 
+      isInitialized, 
+      hasExistingPipeline: !!renderPipelineRef.current 
+    });
+    
+    const canvas = canvasRef.current;
     if (!canvas || !isInitialized || renderPipelineRef.current) return;
 
     const width = canvas.clientWidth;
@@ -92,7 +99,7 @@ export const useRenderPipeline = (
       }
       setRenderingReady(false);
     };
-  }, [isInitialized, creature, level]);
+  }, [canvasRef, isInitialized, creature, level]);
 
   return {
     renderPipeline: renderPipelineRef.current,

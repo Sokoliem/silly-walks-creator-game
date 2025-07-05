@@ -7,7 +7,7 @@ import { Level } from '@/types/level';
 type PhysicsState = 'idle' | 'initializing' | 'ready' | 'error';
 
 export const usePhysicsEngine = (
-  canvas: HTMLCanvasElement | null,
+  canvasRef: React.RefObject<HTMLCanvasElement>,
   level?: Level,
   onCreatureCreated?: (creature: CreatureBody) => void
 ) => {
@@ -100,6 +100,14 @@ export const usePhysicsEngine = (
   }, [level, onCreatureCreated, physicsState, validateCanvas]);
 
   useEffect(() => {
+    console.log('usePhysicsEngine: Effect triggered', { 
+      hasCanvas: !!canvasRef.current, 
+      canvasWidth: canvasRef.current?.clientWidth, 
+      canvasHeight: canvasRef.current?.clientHeight,
+      physicsState 
+    });
+    
+    const canvas = canvasRef.current;
     if (!canvas) {
       console.log('No canvas available for physics initialization');
       return;
@@ -130,11 +138,12 @@ export const usePhysicsEngine = (
         setPhysicsState('idle');
       }
     };
-  }, [canvas, level]);
+  }, [canvasRef, level]);
 
   const resetCreature = () => {
-    if (!engineRef.current || !creatureRef.current || !canvas) return;
+    if (!engineRef.current || !creatureRef.current || !canvasRef.current) return;
     
+    const canvas = canvasRef.current;
     const width = canvas.clientWidth;
     const height = canvas.clientHeight;
     

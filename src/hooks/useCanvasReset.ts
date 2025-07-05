@@ -4,7 +4,7 @@ import { Level } from '@/types/level';
 import { RenderPipeline } from '@/rendering/core/RenderPipeline';
 
 export const useCanvasReset = (
-  canvas: HTMLCanvasElement | null,
+  canvasRef: React.RefObject<HTMLCanvasElement>,
   creature: CreatureBody | null,
   renderPipeline: RenderPipeline | null,
   level: Level | undefined,
@@ -17,6 +17,7 @@ export const useCanvasReset = (
     resetGameState();
     setRenderingReady(false);
     
+    const canvas = canvasRef.current;
     if (renderPipeline && creature && canvas) {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -28,7 +29,7 @@ export const useCanvasReset = (
       renderPipeline.setCamera(resetX, resetY - 100, 0.8);
       setRenderingReady(true);
     }
-  }, [canvas, creature, renderPipeline, level, resetPhysicsCreature, resetGameState, setRenderingReady]);
+  }, [canvasRef, creature, renderPipeline, level, resetPhysicsCreature, resetGameState, setRenderingReady]);
 
   return { resetCreature };
 };
